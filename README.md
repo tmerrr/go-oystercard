@@ -9,9 +9,9 @@ In order to keep using public transport
 As a customer
 I want to add money to my card
 
-In order to protect my money
+In order to protect my money from theft or loss
 As a customer
-I don't want to put too much money on my card
+I want a maximum limit (of £90) on my card
 
 In order to pay for my journey
 As a customer
