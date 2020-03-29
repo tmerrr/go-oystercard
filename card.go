@@ -5,8 +5,12 @@ import (
 	"strconv"
 )
 
-var maxBalance = 90
-var minBalance = 0
+// declare constants
+var (
+	maxBalance = 90
+	minBalance = 0
+	minFare    = 1
+)
 
 func negativeValueCheck(n int) error {
 	if n < 0 {
@@ -16,7 +20,12 @@ func negativeValueCheck(n int) error {
 }
 
 type card struct {
-	balance int
+	balance     int
+	isInJourney bool
+}
+
+func newCard(balance int) card {
+	return card{balance, false}
 }
 
 func (c *card) topup(n int) error {
@@ -45,4 +54,17 @@ func (c *card) deduct(n int) error {
 	}
 	c.balance = nb
 	return nil
+}
+
+func (c *card) tapIn() error {
+	if c.balance < minFare {
+		return errors.New("Insufficient funds. Must have minimum balance of 1")
+	}
+	c.isInJourney = true
+	return nil
+}
+
+func (c *card) tapOut() {
+	c.balance = c.balance - minFare
+	c.isInJourney = false
 }
