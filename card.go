@@ -7,9 +7,10 @@ import (
 
 // declare constants
 var (
-	maxBalance = 90
-	minBalance = 0
-	minFare    = 1
+	maxBalance  = 90
+	minBalance  = 0
+	minFare     = 1
+	penaltyFare = 6
 )
 
 func negativeValueCheck(n int) error {
@@ -61,7 +62,7 @@ func (c *card) tapIn(s station) error {
 	if c.balance < minFare {
 		return errors.New("Insufficient funds. Must have minimum balance of 1")
 	}
-	c.journeys = append(c.journeys, journey{start: s})
+	c.journeys = append(c.journeys, journey{start: &s})
 	c.isInJourney = true
 	return nil
 }
@@ -69,7 +70,7 @@ func (c *card) tapIn(s station) error {
 func (c *card) tapOut(s station) {
 	i := len(c.journeys) - 1
 	j := c.journeys[i]
-	j.end = s
+	j.end = &s
 	c.journeys[i] = j
 	c.balance = c.balance - minFare
 	c.isInJourney = false

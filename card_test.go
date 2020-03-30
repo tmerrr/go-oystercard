@@ -70,7 +70,7 @@ func TestTapIn(t *testing.T) {
 	assert.Nil(t, err, "expected err to be nil")
 	assert.True(t, c.isInJourney, "expected isInJourney to be true")
 	assert.Len(t, c.journeys, 1, "expected journeys to have length of 1")
-	assert.Equal(t, c.journeys[0].start, s, "expected journey start to equal correct station")
+	assert.Equal(t, *c.journeys[0].start, s, "expected journey start to equal correct station")
 }
 
 func TestTapInMinBalance(t *testing.T) {
@@ -92,5 +92,5 @@ func TestTapOut(t *testing.T) {
 	assert.False(t, c.isInJourney, "expected isInJourney to be false")
 	assert.Equal(t, c.balance, 0, "expected balance to be 0")
 	assert.Len(t, c.journeys, 1, "expected journeys to have length of 1")
-	assert.Equal(t, c.journeys[0].end, s, "expected journey end to equal correct station")
+	assert.Equal(t, *c.journeys[0].end, s, "expected journey end to equal correct station")
 }
