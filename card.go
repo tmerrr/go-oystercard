@@ -23,11 +23,11 @@ func negativeValueCheck(n int) error {
 type card struct {
 	balance     int
 	isInJourney bool
-	journeys    []journey
+	journeyLog  journeyLog
 }
 
 func newCard(balance int) card {
-	return card{balance, false, []journey{}}
+	return card{balance, false, journeyLog{}}
 }
 
 func (c *card) topup(n int) error {
@@ -62,16 +62,19 @@ func (c *card) tapIn(s station) error {
 	if c.balance < minFare {
 		return errors.New("Insufficient funds. Must have minimum balance of 1")
 	}
-	c.journeys = append(c.journeys, journey{start: &s})
+	if c.isInJourney == true {
+		j := c.journeyLog.endJourney(nil)
+		fare := calculateFare(j)
+		c.deduct(fare)
+	}
+	c.journeyLog.startJourney(&s)
 	c.isInJourney = true
 	return nil
 }
 
 func (c *card) tapOut(s station) {
-	i := len(c.journeys) - 1
-	j := c.journeys[i]
-	j.end = &s
-	c.journeys[i] = j
-	c.balance = c.balance - minFare
+	j := c.journeyLog.endJourney(&s)
+	f := calculateFare(j)
+	c.deduct(f)
 	c.isInJourney = false
 }

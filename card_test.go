@@ -10,7 +10,7 @@ func TestCardInit(t *testing.T) {
 	c := card{balance: 10, isInJourney: true}
 	assert.Equal(t, c.balance, 10, "expected balance to equal 10")
 	assert.True(t, c.isInJourney, "expected isInJourney to be true")
-	assert.IsType(t, c.journeys, []journey{}, "expected journeys to be slice of type journey")
+	assert.IsType(t, c.journeyLog, journeyLog{}, "expected journey log to be of type journeyLog")
 }
 
 func TestNewCard(t *testing.T) {
@@ -18,7 +18,8 @@ func TestNewCard(t *testing.T) {
 	assert.IsType(t, card{}, c, "expected type of card")
 	assert.Equal(t, c.balance, 10, "expected balance to equal 10")
 	assert.False(t, c.isInJourney, "expected isInJourney to be false")
-	assert.Len(t, c.journeys, 0, "expected journeys to have length of 0")
+	assert.IsType(t, c.journeyLog, journeyLog{}, "expected journey log to be of type journeyLog")
+	assert.Len(t, c.journeyLog.journeys, 0, "expected journey log journeys to have length of 0")
 }
 
 func TestTopup(t *testing.T) {
@@ -69,8 +70,8 @@ func TestTapIn(t *testing.T) {
 	err := c.tapIn(s)
 	assert.Nil(t, err, "expected err to be nil")
 	assert.True(t, c.isInJourney, "expected isInJourney to be true")
-	assert.Len(t, c.journeys, 1, "expected journeys to have length of 1")
-	assert.Equal(t, *c.journeys[0].start, s, "expected journey start to equal correct station")
+	assert.Len(t, c.journeyLog.journeys, 0, "expected journey log journeys to have length of 0")
+	assert.Equal(t, *c.journeyLog.currentJourney.start, s, "expected current journey start to equal correct station")
 }
 
 func TestTapInMinBalance(t *testing.T) {
@@ -79,7 +80,24 @@ func TestTapInMinBalance(t *testing.T) {
 	err := c.tapIn(s)
 	assert.EqualError(t, err, "Insufficient funds. Must have minimum balance of 1", "expected insufficient funds error")
 	assert.False(t, c.isInJourney, "expected isInJourney to be false")
-	assert.Len(t, c.journeys, 0, "expected journeys to have length of 0")
+	assert.Len(t, c.journeyLog.journeys, 0, "expected journey log journeys to have length of 0")
+	assert.Nil(t, c.journeyLog.currentJourney, "expected current journey to be nil")
+}
+
+func TestTapInWithNoTapOut(t *testing.T) {
+	c := newCard(10)
+	// set up current journey
+	c.tapIn(station{"Finsbury Park", 2})
+	// expect no error, but to be charged penalty and new journey started
+	s := station{"Arsenal", 2}
+	err := c.tapIn(s)
+	assert.Nil(t, err, "expected err to be nil")
+	// assert has been charged penalty of 6
+	assert.Equal(t, c.balance, 4, "expected balance to be 4")
+	assert.True(t, c.isInJourney, "expected isInJourney to be true")
+	assert.Len(t, c.journeyLog.journeys, 1, "expected journey log journeys to have length of 1")
+	assert.Nil(t, c.journeyLog.journeys[0].end, "expected last journey end to be nil")
+	assert.Equal(t, *c.journeyLog.currentJourney.start, s, "expected new start station to be correct station")
 }
 
 func TestTapOut(t *testing.T) {
@@ -91,6 +109,18 @@ func TestTapOut(t *testing.T) {
 	c.tapOut(s)
 	assert.False(t, c.isInJourney, "expected isInJourney to be false")
 	assert.Equal(t, c.balance, 0, "expected balance to be 0")
-	assert.Len(t, c.journeys, 1, "expected journeys to have length of 1")
-	assert.Equal(t, *c.journeys[0].end, s, "expected journey end to equal correct station")
+	assert.Len(t, c.journeyLog.journeys, 1, "expected journey log journeys to have length of 1")
+	assert.Equal(t, *c.journeyLog.journeys[0].end, s, "expected journey end to equal correct station")
+}
+
+func TestTapOutWithNoTapIn(t *testing.T) {
+	c := newCard(10)
+	s := station{"Holloway Road", 2}
+	c.tapOut(s)
+	assert.False(t, c.isInJourney, "expected isInJourney to be false")
+	// assert has been charged penalty of 6
+	assert.Equal(t, 4, c.balance, "expected balance to equal 4")
+	assert.Len(t, c.journeyLog.journeys, 1, "expected journeys to have length of 1")
+	assert.Nil(t, c.journeyLog.journeys[0].start, "expected journey start to be nil")
+	assert.Equal(t, c.journeyLog.journeys[0].end, &s, "expected journey end to be correct station")
 }
