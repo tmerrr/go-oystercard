@@ -58,14 +58,19 @@ func (c *card) deduct(n int) error {
 	return nil
 }
 
+func (c *card) endJourney(s *station) {
+	j := c.journeyLog.endJourney(s)
+	f := calculateFare(j)
+	c.deduct(f)
+	c.isInJourney = false
+}
+
 func (c *card) tapIn(s station) error {
 	if c.balance < minFare {
 		return errors.New("Insufficient funds. Must have minimum balance of 1")
 	}
 	if c.isInJourney == true {
-		j := c.journeyLog.endJourney(nil)
-		fare := calculateFare(j)
-		c.deduct(fare)
+		c.endJourney(nil)
 	}
 	c.journeyLog.startJourney(&s)
 	c.isInJourney = true
@@ -73,8 +78,5 @@ func (c *card) tapIn(s station) error {
 }
 
 func (c *card) tapOut(s station) {
-	j := c.journeyLog.endJourney(&s)
-	f := calculateFare(j)
-	c.deduct(f)
-	c.isInJourney = false
+	c.endJourney(&s)
 }

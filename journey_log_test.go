@@ -33,3 +33,18 @@ func TestEndJourney(t *testing.T) {
 	assert.Nil(t, jl.currentJourney, "expected currentJourney to be nil")
 	assert.Equal(t, j, jl.journeys[0], "expected return value to be completed journey")
 }
+
+func TestHistory(t *testing.T) {
+	// NO JOURNEYS
+	jl := journeyLog{}
+	h := jl.history()
+	assert.Equal(t, "No Journeys", h, "expected history to return No Journeys message")
+
+	// WITH JOURNEY
+	s1 := station{"London Bridge", 1}
+	s2 := station{"Old Street", 1}
+	j := journey{&s1, &s2}
+	jl.journeys = append(jl.journeys, j)
+	h = jl.history()
+	assert.Equal(t, "1. Start: London Bridge End: Old Street\n", h, "expected history to return correct message")
+}
